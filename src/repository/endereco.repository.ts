@@ -22,6 +22,38 @@ export class EnderecoRepository {
 
     return rows[0] as IEndereco;
   }
+  // CADASTRAR ENDEREÇO INDEPENDENTE
+  async create(endereco: IEndereco): Promise<number> {
+    const [result] = await db.execute<ResultSetHeader>(
+      `INSERT INTO enderecos (
+      cep,
+      rua,
+      complemento,
+      uf,
+      estado,
+      cidade,
+      bairro,
+      numero,
+      latitude,
+      longitude
+    )
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        endereco.cep,
+        endereco.rua,
+        endereco.complemento ?? null,
+        endereco.uf,
+        endereco.estado,
+        endereco.cidade,
+        endereco.bairro,
+        endereco.numero,
+        endereco.latitude ?? null,
+        endereco.longitude ?? null,
+      ],
+    );
+
+    return result.insertId;
+  }
 
   // CADASTRAR OU ATUALIZAR ENDEREÇO
   async saveOrUpdate(username: string, endereco: IEndereco): Promise<number> {
