@@ -6,15 +6,21 @@ import { ResultSetHeader, PoolConnection } from "mysql2/promise";
 export class UsuarioRepository {
 
     // Buscar usuário pelo ID
-    async findById(id_usuario: number): Promise<IUsuario | null> {
-        const [result] = await db.execute<IUsuario[]>(
-            `SELECT * FROM usuarios
-             WHERE id_usuario = ?`,
-            [id_usuario]
-        );
+async findById(id_usuario: number): Promise<IUsuario | null> {
+    const [result] = await db.execute<IUsuario[]>(
+        `SELECT
+            u.*,
+            a.username
+         FROM usuarios u
+         LEFT JOIN autenticacao a
+            ON a.id_usuario = u.id_usuario
+         WHERE u.id_usuario = ?`,
+        [id_usuario]
+    );
 
-        return result.length > 0 ? result[0] : null;
-    }
+    return result.length > 0 ? result[0] : null;
+}
+
 
     // Buscar usuário pelo e-mail
     async findByEmail(email: string): Promise<IUsuario | null> {
@@ -57,32 +63,54 @@ export class UsuarioRepository {
     }
 
     // Atualizar usuário
-    async update(
-        id_usuario: number,
-        nome: string,
-        email: string,
-        url_foto_perfil?: string,
-        id_endereco?: number
-    ): Promise<boolean> {
 
-        const [result] = await db.execute<ResultSetHeader>(
-            `UPDATE usuarios
-             SET nome = ?,
-                 email = ?,
-                 url_foto_perfil = ?,
-                 id_endereco = ?
-             WHERE id_usuario = ?`,
-            [
-                nome,
-                email,
-                url_foto_perfil ?? null,
-                id_endereco ?? null,
-                id_usuario
-            ]
-        );
+async update(
+    id_usuario: number,
+    nome?: string,
+    email?: string,
+    url_foto_perfil?: string | null,
+    id_endereco?: number | null
+): Promise<boolean> {
 
-        return result.affectedRows > 0;
+    const campos: string[] = [];
+    const valores: (string | number | null)[] = [];
+
+    if (nome !== undefined) {
+        campos.push("nome = ?");
+        valores.push(nome);
     }
+
+    if (email !== undefined) {
+        campos.push("email = ?");
+        valores.push(email);
+    }
+
+    if (url_foto_perfil !== undefined) {
+        campos.push("url_foto_perfil = ?");
+        valores.push(url_foto_perfil);
+    }
+
+    if (id_endereco !== undefined) {
+        campos.push("id_endereco = ?");
+        valores.push(id_endereco);
+    }
+
+    if (campos.length === 0) {
+        return false;
+    }
+
+    valores.push(id_usuario);
+
+    const [result] = await db.execute<ResultSetHeader>(
+        `UPDATE usuarios
+         SET ${campos.join(", ")}
+         WHERE id_usuario = ?`,
+        valores
+    );
+
+    return result.affectedRows > 0;
+}
+
 
     // Atualizar foto de perfil
     async updateFotoPerfil(

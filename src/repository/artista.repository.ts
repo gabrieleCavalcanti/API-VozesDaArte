@@ -1,7 +1,7 @@
 
 import { db } from "../database/connection.database";
 import { IArtista } from "../models/artista.model";
-import { ResultSetHeader, RowDataPacket, PoolConnection } from "mysql2/promise";
+import { ResultSetHeader, PoolConnection } from "mysql2/promise";
 
 export class ArtistaRepository {
 
@@ -39,9 +39,9 @@ export class ArtistaRepository {
     // Criar artista
     async create(
         id_usuario: number,
-        url_foto_capa?: string,
-        biografia?: string,
-        contato_profissional?: string,
+        url_foto_capa?: string | null,
+        biografia?: string | null,
+        contato_profissional?: string | null,
         connection?: PoolConnection
     ): Promise<number> {
 
@@ -65,46 +65,60 @@ export class ArtistaRepository {
     // Atualizar artista
     async update(
         id_artista: number,
-        url_foto_capa?: string,
-        biografia?: string,
-        contato_profissional?: string
+        url_foto_capa?: string | null,
+        biografia?: string | null,
+        contato_profissional?: string | null
     ): Promise<boolean> {
+
+        const campos: string[] = [];
+        const valores: (string | number | null)[] = [];
+
+        if (url_foto_capa !== undefined) {
+            campos.push("url_foto_capa = ?");
+            valores.push(url_foto_capa);
+        }
+
+        if (biografia !== undefined) {
+            campos.push("biografia = ?");
+            valores.push(biografia);
+        }
+
+        if (contato_profissional !== undefined) {
+            campos.push("contato_profissional = ?");
+            valores.push(contato_profissional);
+        }
+
+        if (campos.length === 0) {
+            return false;
+        }
+
+        valores.push(id_artista);
 
         const [result] = await db.execute<ResultSetHeader>(
             `UPDATE artistas
-             SET url_foto_capa = ?,
-                 biografia = ?,
-                 contato_profissional = ?
+             SET ${campos.join(", ")}
              WHERE id_artista = ?`,
-            [
-                url_foto_capa ?? null,
-                biografia ?? null,
-                contato_profissional ?? null,
-                id_artista
-            ]
+            valores
         );
 
         return result.affectedRows > 0;
     }
 
     // Atualizar foto de capa do artista
-async updateFotoCapa(
-    id_artista: number,
-    nomeArquivo: string
-): Promise<boolean> {
+    async updateFotoCapa(
+        id_artista: number,
+        nomeArquivo: string
+    ): Promise<boolean> {
 
-    const [result] = await db.execute<ResultSetHeader>(
-        `UPDATE artistas
-         SET url_foto_capa = ?
-         WHERE id_artista = ?`,
-        [
-            nomeArquivo,
-            id_artista
-        ]
-    );
+        const [result] = await db.execute<ResultSetHeader>(
+            `UPDATE artistas
+             SET url_foto_capa = ?
+             WHERE id_artista = ?`,
+            [nomeArquivo, id_artista]
+        );
 
-    return result.affectedRows > 0;
-}
+        return result.affectedRows > 0;
+    }
 
     // Excluir artista
     async delete(id_artista: number): Promise<boolean> {

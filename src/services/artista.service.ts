@@ -71,26 +71,20 @@ export class ArtistaService {
   // Atualizar artista
   async update(
     id_artista: number,
-    url_foto_capa?: string,
-    biografia?: string,
-    contato_profissional?: string,
+    url_foto_capa?: string | null,
+    biografia?: string | null,
+    contato_profissional?: string | null
   ) {
     await this.findById(id_artista);
 
-    const artista = Artista.editar(
+    return await this.artistaRepository.update(
       id_artista,
       url_foto_capa,
       biografia,
-      contato_profissional,
-    );
-
-    return await this.artistaRepository.update(
-      artista.Id!,
-      artista.UrlFotoCapa,
-      artista.Biografia,
-      artista.ContatoProfissional,
+      contato_profissional
     );
   }
+
 
   // Atualizar foto de capa do artista
   async updateFotoCapa(id_artista: number, nomeArquivo: string) {

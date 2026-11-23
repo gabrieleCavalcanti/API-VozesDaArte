@@ -9,6 +9,7 @@ export interface IUsuario extends RowDataPacket {
     url_foto_perfil?: string;
     data_cadastro?: Date;
     id_endereco?: number;
+    username?: string;
 }
 
 export class Usuario {

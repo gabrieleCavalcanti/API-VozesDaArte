@@ -72,6 +72,7 @@ export class ArtistaController {
   update = async (req: Request, res: Response): Promise<void> => {
     try {
       const id_artista = Number(req.params.id);
+      console.log("DADOS RECEBIDOS PARA EDIÇÃO:", req.body);
 
       if (!Number.isInteger(id_artista) || id_artista <= 0) {
         res.status(400).json({

@@ -1,14 +1,15 @@
 
 import { Usuario } from "../models/usuario.model";
 import { UsuarioRepository } from "../repository/usuario.repository";
+import { AuthRepository } from "../repository/auth.repository";
 
 export class UsuarioService {
 
     private usuarioRepository = new UsuarioRepository();
+    private authRepository = new AuthRepository();
 
     // Buscar usuário pelo ID
     async findById(id_usuario: number) {
-
         const usuario = await this.usuarioRepository.findById(id_usuario);
 
         if (!usuario) {
@@ -20,7 +21,6 @@ export class UsuarioService {
 
     // Buscar usuário pelo e-mail
     async findByEmail(email: string) {
-
         const usuario = await this.usuarioRepository.findByEmail(email);
 
         if (!usuario) {
@@ -32,13 +32,11 @@ export class UsuarioService {
 
     // Listar todos os usuários
     async findAll() {
-
         return await this.usuarioRepository.findAll();
     }
 
     // Criar usuário
     async create(nome: string, email: string, tipo: string) {
-
         if (!nome || !email || !tipo) {
             throw new Error("Preencha todos os campos obrigatórios.");
         }
@@ -63,10 +61,10 @@ export class UsuarioService {
         id_usuario: number,
         nome: string,
         email: string,
+        username: string,
         url_foto_perfil?: string,
         id_endereco?: number
     ) {
-
         await this.findById(id_usuario);
 
         const usuarioComEmail = await this.usuarioRepository.findByEmail(email);
@@ -78,7 +76,16 @@ export class UsuarioService {
             throw new Error("Este e-mail já está sendo utilizado.");
         }
 
-        const usuario = Usuario.editar(
+        const autenticacao = await this.authRepository.findByUsername(username);
+
+        if (
+            autenticacao &&
+            autenticacao.id_usuario !== id_usuario
+        ) {
+            throw new Error("Este username já está sendo utilizado.");
+        }
+
+        await this.usuarioRepository.update(
             id_usuario,
             nome,
             email,
@@ -86,13 +93,16 @@ export class UsuarioService {
             id_endereco
         );
 
-        return await this.usuarioRepository.update(
-            usuario.Id!,
-            usuario.Nome,
-            usuario.Email,
-            usuario.UrlFotoPerfil,
-            usuario.IdEndereco
+        const usernameAtualizado = await this.authRepository.updateUsername(
+            id_usuario,
+            username
         );
+
+        if (!usernameAtualizado) {
+            throw new Error("Não foi possível atualizar o username.");
+        }
+
+        return true;
     }
 
     // Atualizar foto de perfil
@@ -100,7 +110,6 @@ export class UsuarioService {
         id_usuario: number,
         url_foto_perfil: string
     ): Promise<boolean> {
-
         await this.findById(id_usuario);
 
         if (!url_foto_perfil || !url_foto_perfil.trim()) {
@@ -115,7 +124,6 @@ export class UsuarioService {
 
     // Excluir usuário
     async delete(id_usuario: number) {
-
         await this.findById(id_usuario);
 
         return await this.usuarioRepository.delete(id_usuario);

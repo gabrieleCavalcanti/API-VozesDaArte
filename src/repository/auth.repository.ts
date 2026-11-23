@@ -2,6 +2,7 @@ import { db } from "../database/connection.database";
 import { IAuth } from "../models/auth.model";
 import { ResultSetHeader, PoolConnection } from "mysql2/promise";
 
+
 export class AuthRepository {
   // Buscar autenticação pelo ID
 async findById(id_autenticacao: number): Promise<IAuth | null> {

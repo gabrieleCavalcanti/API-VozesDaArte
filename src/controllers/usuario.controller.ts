@@ -264,12 +264,12 @@ export class UsuarioController {
         return;
       }
 
-      const { nome, email, url_foto_perfil, id_endereco } = req.body;
+      const { nome, email, username, id_endereco } = req.body;
 
       // VALIDAR CAMPOS OBRIGATÓRIOS
-      if (!nome || !email) {
+      if (!nome || !email || !username) {
         res.status(400).json({
-          message: "Nome e e-mail são obrigatórios.",
+          message: "Nome, e-mail e username são obrigatórios.",
         });
         return;
       }
@@ -290,10 +290,11 @@ export class UsuarioController {
         return;
       }
 
-      // VALIDAR FOTO DE PERFIL
-      if (!validarCampoOpcional(url_foto_perfil, 500)) {
+      // VALIDAR USERNAME
+      if (!validarUsername(username)) {
         res.status(400).json({
-          message: "A URL da foto de perfil deve possuir até 500 caracteres.",
+          message:
+            "O username deve possuir entre 3 e 30 caracteres e conter apenas letras, números, ponto, hífen ou underline.",
         });
         return;
       }
@@ -311,7 +312,8 @@ export class UsuarioController {
         id_usuario,
         nome.trim(),
         email.trim().toLowerCase(),
-        url_foto_perfil,
+        username.trim(),
+        undefined,
         id_endereco === undefined || id_endereco === null
           ? undefined
           : Number(id_endereco),
@@ -343,57 +345,113 @@ export class UsuarioController {
     }
   };
 
+  // // ATUALIZAR FOTO DE PERFIL
+  // atualizarFoto = async (req: Request, res: Response): Promise<void> => {
+  //   try {
+  //     if (!req.user) {
+  //       res.status(401).json({
+  //         message: "Usuário não autenticado.",
+  //       });
+  //       return;
+  //     }
+
+  //     if (!req.file) {
+  //       res.status(400).json({
+  //         message: "Envie uma imagem.",
+  //       });
+  //       return;
+  //     }
+
+  //     // BUSCAR AUTENTICAÇÃO
+  //     const autenticacao = await this.authService.findById(
+  //       req.user.id_autenticacao,
+  //     );
+
+  //     // ATUALIZAR FOTO UTILIZANDO ID DO USUÁRIO
+  //     const atualizado = await this.usuarioService.updateFotoPerfil(
+  //       autenticacao.id_usuario,
+  //       req.file.filename,
+  //     );
+
+  //     if (!atualizado) {
+  //       res.status(404).json({
+  //         message: "Usuário não encontrado.",
+  //       });
+  //       return;
+  //     }
+
+  //     res.status(200).json({
+  //       message: "Foto de perfil atualizada com sucesso.",
+  //       foto: req.file.filename,
+  //     });
+  //   } catch (error) {
+  //     const mensagem =
+  //       error instanceof Error
+  //         ? error.message
+  //         : "Erro ao atualizar foto de perfil.";
+
+  //     res.status(mensagem.includes("não encontrado") ? 404 : 500).json({
+  //       message: mensagem,
+  //     });
+  //   }
+  // };
   // ATUALIZAR FOTO DE PERFIL
 atualizarFoto = async (req: Request, res: Response): Promise<void> => {
-    try {
-        if (!req.user) {
-            res.status(401).json({
-                message: "Usuário não autenticado."
-            });
-            return;
-        }
-
-        if (!req.file) {
-            res.status(400).json({
-                message: "Envie uma imagem."
-            });
-            return;
-        }
-
-        // BUSCAR AUTENTICAÇÃO
-        const autenticacao = await this.authService.findById(
-            req.user.id_autenticacao
-        );
-
-        // ATUALIZAR FOTO UTILIZANDO ID DO USUÁRIO
-        const atualizado = await this.usuarioService.updateFotoPerfil(
-            autenticacao.id_usuario,
-            req.file.filename
-        );
-
-        if (!atualizado) {
-            res.status(404).json({
-                message: "Usuário não encontrado."
-            });
-            return;
-        }
-
-        res.status(200).json({
-            message: "Foto de perfil atualizada com sucesso.",
-            foto: req.file.filename
-        });
-
-    } catch (error) {
-        const mensagem = error instanceof Error
-            ? error.message
-            : "Erro ao atualizar foto de perfil.";
-
-        res.status(
-            mensagem.includes("não encontrado") ? 404 : 500
-        ).json({
-            message: mensagem
-        });
+  try {
+    // Verificar autenticação
+    if (!req.user) {
+      res.status(401).json({
+        message: "Usuário não autenticado.",
+      });
+      return;
     }
+
+    // Verificar se a imagem foi enviada
+    if (!req.file) {
+      res.status(400).json({
+        message: "Envie uma imagem.",
+      });
+      return;
+    }
+
+    // Buscar dados da autenticação
+    const autenticacao = await this.authService.findById(
+      req.user.id_autenticacao,
+    );
+
+    console.log("AUTENTICAÇÃO:", autenticacao);
+
+    // Atualizar o nome do arquivo no banco
+    const atualizado = await this.usuarioService.updateFotoPerfil(
+      autenticacao.id_usuario,
+      req.file.filename,
+    );
+
+    console.log("ID USUÁRIO:", autenticacao.id_usuario);
+    console.log("ARQUIVO:", req.file.filename);
+    console.log("ATUALIZADO:", atualizado);
+
+    if (!atualizado) {
+      res.status(404).json({
+        message: "Não foi possível atualizar a foto do usuário.",
+      });
+      return;
+    }
+
+    res.status(200).json({
+      message: "Foto de perfil atualizada com sucesso.",
+      foto: req.file.filename,
+    });
+  } catch (error) {
+    console.error("ERRO AO ATUALIZAR FOTO:", error);
+
+    res.status(500).json({
+      message:
+        error instanceof Error
+          ? error.message
+          : "Erro ao atualizar foto de perfil.",
+    });
+  }
 };
 
   // EXCLUIR USUÁRIO
