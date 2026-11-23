@@ -11,6 +11,23 @@ export interface IPost extends RowDataPacket {
     arquivado?: boolean;
     data_cadastro?: Date;
     id_artista: number;
+    // Dados adicionais do feed
+nome_artista?: string;
+url_foto_perfil?: string;
+url_foto_capa?: string;
+nome_categoria?: string;
+
+endereco_id_endereco?: number | null;
+endereco_cep?: string | null;
+endereco_rua?: string | null;
+endereco_complemento?: string | null;
+endereco_uf?: string | null;
+endereco_estado?: string | null;
+endereco_cidade?: string | null;
+endereco_bairro?: string | null;
+endereco_numero?: string | null;
+endereco_latitude?: number | null;
+endereco_longitude?: number | null;
 }
 
 export class Post {

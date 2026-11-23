@@ -8,10 +8,10 @@ const app = express();
 
 app.use(express.json());
 
-// app.use(
-//   "/images",
-//   express.static(path.resolve(process.cwd(), "uploads", "Images")),
-// );
+app.use(
+  "/images",
+  express.static(path.resolve(process.cwd(), "uploads", "Images")),
+);
 
 app.use("/", router);
 

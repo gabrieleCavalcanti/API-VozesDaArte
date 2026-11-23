@@ -129,6 +129,49 @@ export class EventoController {
       });
     }
   };
+  // BUSCAR FEED DE EVENTOS
+findFeed = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const pagina = Number(req.query.pagina) || 1;
+
+    const latitudeUsuario =
+      req.query.latitude !== undefined
+        ? Number(req.query.latitude)
+        : undefined;
+
+    const longitudeUsuario =
+      req.query.longitude !== undefined
+        ? Number(req.query.longitude)
+        : undefined;
+
+    if (
+      (latitudeUsuario !== undefined &&
+        !Number.isFinite(latitudeUsuario)) ||
+      (longitudeUsuario !== undefined &&
+        !Number.isFinite(longitudeUsuario))
+    ) {
+      res.status(400).json({
+        message: "Coordenadas inválidas.",
+      });
+      return;
+    }
+
+    const eventos = await this.eventoService.findAll(
+      pagina,
+      latitudeUsuario,
+      longitudeUsuario
+    );
+
+    res.status(200).json(eventos);
+  } catch (error) {
+    const mensagem =
+      error instanceof Error
+        ? error.message
+        : "Erro ao buscar feed de eventos.";
+
+    res.status(500).json({ message: mensagem });
+  }
+};
 
   // LISTAR EVENTOS DE UM ARTISTA
   findByArtista = async (req: Request, res: Response): Promise<void> => {

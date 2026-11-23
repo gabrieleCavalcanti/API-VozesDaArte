@@ -16,26 +16,118 @@ export class PostRepository {
         return result.length > 0 ? result[0] : null;
     }
 
-    // Listar todos os posts
-    async findAll(): Promise<IPost[]> {
-        const [result] = await db.execute<IPost[]>(
-            `SELECT * FROM posts`
-        );
+    // LISTAR POSTS DO FEED
+// LISTAR POSTS DO FEED
+async findAll(): Promise<IPost[]> {
+    const [result] = await db.execute<IPost[]>(
+        `SELECT
+            p.*,
 
-        return result;
-    }
+            a.url_foto_capa,
 
-    // Listar posts de um artista
-    async findByArtista(id_artista: number): Promise<IPost[]> {
-        const [result] = await db.execute<IPost[]>(
-            `SELECT * FROM posts
-             WHERE id_artista = ?
-             ORDER BY data_cadastro DESC`,
-            [id_artista]
-        );
+            u.id_usuario,
+            u.nome AS nome_artista,
+            u.url_foto_perfil,
 
-        return result;
-    }
+            c.nome_categoria,
+
+            e.id_endereco AS endereco_id_endereco,
+            e.cep AS endereco_cep,
+            e.rua AS endereco_rua,
+            e.complemento AS endereco_complemento,
+            e.uf AS endereco_uf,
+            e.estado AS endereco_estado,
+            e.cidade AS endereco_cidade,
+            e.bairro AS endereco_bairro,
+            e.numero AS endereco_numero,
+            e.latitude AS endereco_latitude,
+            e.longitude AS endereco_longitude
+
+         FROM posts p
+
+         INNER JOIN artistas a
+            ON p.id_artista = a.id_artista
+
+         INNER JOIN usuarios u
+            ON a.id_usuario = u.id_usuario
+
+         LEFT JOIN enderecos e
+            ON u.id_endereco = e.id_endereco
+
+         LEFT JOIN categorias c
+            ON p.id_categoria = c.id_categoria
+
+         WHERE p.arquivado = FALSE
+
+         ORDER BY p.data_cadastro DESC`
+    );
+
+    return result;
+}
+
+// LISTAR POSTS DE UM ARTISTA
+async findByArtista(id_artista: number): Promise<IPost[]> {
+    const [result] = await db.execute<IPost[]>(
+        `SELECT * FROM posts
+         WHERE id_artista = ?
+           AND arquivado = FALSE
+         ORDER BY data_cadastro DESC`,
+        [id_artista]
+    );
+
+    return result;
+}
+
+
+// BUSCAR PUBLICAÇÕES ELEGÍVEIS PARA O FEED
+async findFeedCandidates(): Promise<IPost[]> {
+    const [result] = await db.execute<IPost[]>(
+        `SELECT
+            p.*,
+
+            a.url_foto_capa,
+
+            u.id_usuario,
+            u.nome AS nome_artista,
+            u.url_foto_perfil,
+
+            c.nome_categoria,
+
+            e.id_endereco AS endereco_id_endereco,
+            e.cep AS endereco_cep,
+            e.rua AS endereco_rua,
+            e.complemento AS endereco_complemento,
+            e.uf AS endereco_uf,
+            e.estado AS endereco_estado,
+            e.cidade AS endereco_cidade,
+            e.bairro AS endereco_bairro,
+            e.numero AS endereco_numero,
+            e.latitude AS endereco_latitude,
+            e.longitude AS endereco_longitude
+
+        FROM posts p
+
+        INNER JOIN artistas a
+            ON p.id_artista = a.id_artista
+
+        INNER JOIN usuarios u
+            ON a.id_usuario = u.id_usuario
+
+        LEFT JOIN enderecos e
+            ON u.id_endereco = e.id_endereco
+
+        LEFT JOIN categorias c
+            ON p.id_categoria = c.id_categoria
+
+        WHERE p.arquivado = FALSE
+          AND p.data_cadastro >= DATE_SUB(NOW(), INTERVAL 60 DAY)
+
+        ORDER BY p.data_cadastro DESC`
+    );
+
+    return result;
+}
+
 
     // Criar post
     async create(

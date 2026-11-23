@@ -11,6 +11,10 @@ const authMiddleware = new AuthMiddleware();
 
 // ROTAS PÚBLICAS
 router.get("/", postController.findAll);
+
+// FEED INTELIGENTE
+router.get("/feed", postController.findFeed);
+
 router.get("/artista/:id_artista", postController.findByArtista);
 router.get("/:id", postController.findById);
 

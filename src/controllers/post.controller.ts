@@ -101,6 +101,48 @@ export class PostController {
     }
   };
 
+  // BUSCAR FEED DE POSTS
+findFeed = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const pagina = Number(req.query.pagina) || 1;
+
+    const latitudeUsuario =
+      req.query.latitude !== undefined
+        ? Number(req.query.latitude)
+        : undefined;
+
+    const longitudeUsuario =
+      req.query.longitude !== undefined
+        ? Number(req.query.longitude)
+        : undefined;
+
+    if (
+      (latitudeUsuario !== undefined && !Number.isFinite(latitudeUsuario)) ||
+      (longitudeUsuario !== undefined && !Number.isFinite(longitudeUsuario))
+    ) {
+      res.status(400).json({
+        message: "Coordenadas inválidas.",
+      });
+      return;
+    }
+
+    const posts = await this.postService.findAll(
+      pagina,
+      latitudeUsuario,
+      longitudeUsuario,
+    );
+
+    res.status(200).json(posts);
+  } catch (error) {
+    const mensagem =
+      error instanceof Error ? error.message : "Erro ao buscar feed de posts.";
+
+    res.status(500).json({
+      message: mensagem,
+    });
+  }
+};
+
   // LISTAR POSTS DE UM ARTISTA
   findByArtista = async (req: Request, res: Response): Promise<void> => {
     try {

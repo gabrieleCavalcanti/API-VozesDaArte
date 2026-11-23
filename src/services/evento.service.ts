@@ -3,6 +3,7 @@ import { Evento, IEvento } from "../models/evento.model";
 import { IEndereco } from "../models/endereco.model";
 import { EventoRepository } from "../repository/evento.repository";
 import { EnderecoRepository } from "../repository/endereco.repository";
+import { organizarFeed } from "../utils/feed.util";
 
 export class EventoService {
   private eventoRepository = new EventoRepository();
@@ -24,9 +25,24 @@ export class EventoService {
   }
 
   // LISTAR TODOS OS EVENTOS
-  async findAll() {
-    return await this.eventoRepository.findAll();
-  }
+
+    // LISTAR EVENTOS DO FEED COM PAGINAÇÃO
+    async findAll(
+        pagina: number = 1,
+        latitudeUsuario?: number,
+        longitudeUsuario?: number
+    ) {
+        const eventos =
+            await this.eventoRepository.findFeedCandidates();
+
+        return organizarFeed(
+            eventos,
+            pagina,
+            latitudeUsuario,
+            longitudeUsuario
+        );
+    }
+
 
   // LISTAR EVENTOS DE UM ARTISTA
   async findByArtista(id_artista: number) {

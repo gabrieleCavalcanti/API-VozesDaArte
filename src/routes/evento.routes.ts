@@ -11,6 +11,10 @@ const authMiddleware = new AuthMiddleware();
 
 // ROTAS PÚBLICAS
 router.get("/", eventoController.findAll);
+
+// FEED INTELIGENTE
+router.get("/feed", eventoController.findFeed);
+
 router.get("/artista/:id_artista", eventoController.findByArtista);
 router.get("/:id", eventoController.findById);
 
@@ -59,6 +63,7 @@ router.patch(
   eventoController.destacar
 );
 
+// RETIRAR DESTAQUE
 router.patch(
   "/:id/retirar-destaque",
   authMiddleware.authenticate,

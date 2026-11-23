@@ -19,29 +19,110 @@ export class EventoRepository {
     return rows[0] as IEvento;
   }
 
-  // LISTAR TODOS OS EVENTOS
-  async findAll(): Promise<IEvento[]> {
+  // LISTAR EVENTOS DO FEED
+// LISTAR EVENTOS DO FEED
+async findAll(): Promise<IEvento[]> {
     const [rows] = await db.execute<RowDataPacket[]>(
-      `SELECT *
-             FROM eventos
-             ORDER BY data_hora ASC`,
+        `SELECT
+            ev.*,
+
+            a.url_foto_capa,
+
+            u.id_usuario,
+            u.nome AS nome_artista,
+            u.url_foto_perfil,
+
+            end.id_endereco AS endereco_id_endereco,
+            end.cep AS endereco_cep,
+            end.rua AS endereco_rua,
+            end.complemento AS endereco_complemento,
+            end.uf AS endereco_uf,
+            end.estado AS endereco_estado,
+            end.cidade AS endereco_cidade,
+            end.bairro AS endereco_bairro,
+            end.numero AS endereco_numero,
+            end.latitude AS endereco_latitude,
+            end.longitude AS endereco_longitude
+
+         FROM eventos ev
+
+         INNER JOIN artistas a
+            ON ev.id_artista = a.id_artista
+
+         INNER JOIN usuarios u
+            ON a.id_usuario = u.id_usuario
+
+         LEFT JOIN enderecos end
+            ON ev.id_endereco = end.id_endereco
+
+         WHERE ev.arquivado = 0
+           AND ev.data_hora >= NOW()
+
+         ORDER BY ev.data_hora ASC`
+    );
+
+    return rows as IEvento[];
+}
+
+// LISTAR EVENTOS DE UM ARTISTA
+async findByArtista(id_artista: number): Promise<IEvento[]> {
+    const [rows] = await db.execute<RowDataPacket[]>(
+        `SELECT * FROM eventos
+         WHERE id_artista = ?
+           AND arquivado = 0
+         ORDER BY data_hora ASC`,
+        [id_artista]
+    );
+
+    return rows as IEvento[];
+}
+
+
+  // BUSCAR EVENTOS ELEGÍVEIS PARA O FEED
+  async findFeedCandidates(): Promise<IEvento[]> {
+    const [rows] = await db.execute<RowDataPacket[]>(
+      `SELECT
+          ev.*,
+
+          a.url_foto_capa,
+
+          u.id_usuario,
+          u.nome AS nome_artista,
+          u.url_foto_perfil,
+
+          end.id_endereco AS endereco_id_endereco,
+          end.cep AS endereco_cep,
+          end.rua AS endereco_rua,
+          end.complemento AS endereco_complemento,
+          end.uf AS endereco_uf,
+          end.estado AS endereco_estado,
+          end.cidade AS endereco_cidade,
+          end.bairro AS endereco_bairro,
+          end.numero AS endereco_numero,
+          end.latitude AS endereco_latitude,
+          end.longitude AS endereco_longitude
+
+      FROM eventos ev
+
+      INNER JOIN artistas a
+          ON ev.id_artista = a.id_artista
+
+      INNER JOIN usuarios u
+          ON a.id_usuario = u.id_usuario
+
+      LEFT JOIN enderecos end
+          ON ev.id_endereco = end.id_endereco
+
+      WHERE ev.arquivado = FALSE
+        AND ev.data_cadastro >= DATE_SUB(NOW(), INTERVAL 60 DAY)
+        AND ev.data_hora >= NOW()
+
+      ORDER BY ev.data_cadastro DESC`
     );
 
     return rows as IEvento[];
   }
 
-  // LISTAR EVENTOS DE UM ARTISTA
-  async findByArtista(id_artista: number): Promise<IEvento[]> {
-    const [rows] = await db.execute<RowDataPacket[]>(
-      `SELECT *
-             FROM eventos
-             WHERE id_artista = ?
-             ORDER BY data_hora ASC`,
-      [id_artista],
-    );
-
-    return rows as IEvento[];
-  }
 
   // CADASTRAR EVENTO
   async create(evento: IEvento): Promise<number> {

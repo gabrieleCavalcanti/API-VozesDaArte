@@ -1,6 +1,7 @@
 
 import { Post } from "../models/post.model";
 import { PostRepository } from "../repository/post.repository";
+import { organizarFeed } from "../utils/feed.util";
 
 export class PostService {
 
@@ -19,10 +20,24 @@ export class PostService {
     }
 
     // Listar todos os posts
-    async findAll() {
 
-        return await this.postRepository.findAll();
+    // LISTAR POSTS DO FEED COM PAGINAÇÃO
+    async findAll(
+        pagina: number = 1,
+        latitudeUsuario?: number,
+        longitudeUsuario?: number
+    ) {
+        const publicacoes =
+            await this.postRepository.findFeedCandidates();
+
+        return organizarFeed(
+            publicacoes,
+            pagina,
+            latitudeUsuario,
+            longitudeUsuario
+        );
     }
+
 
     // Listar posts de um artista
     async findByArtista(id_artista: number) {

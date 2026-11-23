@@ -10,6 +10,23 @@ export interface IEvento {
     url_img?: string | null;
     id_artista: number;
     id_endereco: number;
+    data_cadastro?: Date | string;
+    // Dados adicionais do feed
+nome_artista?: string;
+url_foto_perfil?: string;
+url_foto_capa?: string;
+
+endereco_id_endereco?: number | null;
+endereco_cep?: string | null;
+endereco_rua?: string | null;
+endereco_complemento?: string | null;
+endereco_uf?: string | null;
+endereco_estado?: string | null;
+endereco_cidade?: string | null;
+endereco_bairro?: string | null;
+endereco_numero?: string | null;
+endereco_latitude?: number | null;
+endereco_longitude?: number | null;
 }
 
 export class Evento {
