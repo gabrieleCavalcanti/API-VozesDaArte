@@ -49,6 +49,19 @@ export class PostService {
         return await this.postRepository.findByArtista(id_artista);
     }
 
+    // LISTAR POSTS ARQUIVADOS DO ARTISTA
+async findArquivadosByArtista(
+    id_artista: number
+) {
+    if (!id_artista || id_artista <= 0) {
+        throw new Error("Informe um artista válido.");
+    }
+
+    return await this.postRepository.findArquivadosByArtista(
+        id_artista
+    );
+}
+
     // Criar post
     async create(
         id_categoria: number,

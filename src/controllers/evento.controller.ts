@@ -195,6 +195,39 @@ findFeed = async (req: Request, res: Response): Promise<void> => {
     }
   };
 
+  // LISTAR EVENTOS ARQUIVADOS DO ARTISTA AUTENTICADO
+findArquivados = async (
+  req: Request,
+  res: Response,
+): Promise<void> => {
+  try {
+    const artista = await this.obterArtistaAutenticado(req);
+
+    const eventos = await this.eventoService.findArquivados(
+      artista.id_artista,
+    );
+
+    res.status(200).json(eventos);
+  } catch (error) {
+    const mensagem =
+      error instanceof Error
+        ? error.message
+        : "Erro ao listar eventos arquivados.";
+
+    const status = mensagem.includes("não autenticado")
+      ? 401
+      : mensagem.includes("Apenas artistas")
+        ? 403
+        : mensagem.includes("não encontrado")
+          ? 404
+          : 500;
+
+    res.status(status).json({
+      message: mensagem,
+    });
+  }
+};
+
   // CRIAR EVENTO
   create = async (req: Request, res: Response): Promise<void> => {
     try {

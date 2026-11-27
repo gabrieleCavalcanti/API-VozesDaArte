@@ -1,4 +1,3 @@
-
 import { Router } from "express";
 import { PostController } from "../controllers/post.controller";
 import { AuthMiddleware } from "../middleware/AuthMiddleware";
@@ -15,7 +14,18 @@ router.get("/", postController.findAll);
 // FEED INTELIGENTE
 router.get("/feed", postController.findFeed);
 
+// POSTS DE UM ARTISTA
 router.get("/artista/:id_artista", postController.findByArtista);
+
+// LISTAR POSTS ARQUIVADOS
+// IMPORTANTE: precisa ficar antes de /:id
+router.get(
+  "/arquivados",
+  authMiddleware.authenticate,
+  postController.findArquivados
+);
+
+// BUSCAR POST POR ID
 router.get("/:id", postController.findById);
 
 // CRIAR POST

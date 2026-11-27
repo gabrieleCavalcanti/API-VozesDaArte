@@ -165,6 +165,40 @@ findFeed = async (req: Request, res: Response): Promise<void> => {
     }
   };
 
+  // LISTAR POSTS ARQUIVADOS DO ARTISTA AUTENTICADO
+findArquivados = async (
+    req: Request,
+    res: Response
+): Promise<void> => {
+    try {
+        const artista = await this.obterArtistaAutenticado(req);
+
+        const posts = await this.postService.findArquivadosByArtista(
+            artista.id_artista
+        );
+
+        res.status(200).json(posts);
+
+    } catch (error) {
+        const mensagem =
+            error instanceof Error
+                ? error.message
+                : "Erro ao listar posts arquivados.";
+
+        const status = mensagem.includes("não autenticado")
+            ? 401
+            : mensagem.includes("Apenas artistas")
+                ? 403
+                : mensagem.includes("não encontrado")
+                    ? 404
+                    : 500;
+
+        res.status(status).json({
+            message: mensagem,
+        });
+    }
+};
+
   // CRIAR POST
   create = async (req: Request, res: Response): Promise<void> => {
     try {

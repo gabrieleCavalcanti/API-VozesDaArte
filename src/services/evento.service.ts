@@ -91,6 +91,15 @@ export class EventoService {
     }
   }
 
+  // LISTAR EVENTOS ARQUIVADOS
+async findArquivados(id_artista: number) {
+  if (!id_artista || id_artista <= 0) {
+    throw new Error("Artista não identificado.");
+  }
+
+  return await this.eventoRepository.findArquivados(id_artista);
+}
+
   // CADASTRAR EVENTO
   async create(
     dados: Partial<IEvento>,
