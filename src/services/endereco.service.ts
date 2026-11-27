@@ -6,7 +6,7 @@ export class EnderecoService {
 
     private enderecoRepository = new EnderecoRepository();
 
-    // Buscar endereço do usuário
+    // Buscar endereço do usuário autenticado
     async findByUsername(username: string) {
 
         if (!username) {
@@ -15,6 +15,23 @@ export class EnderecoService {
 
         const endereco =
             await this.enderecoRepository.findByUsername(username);
+
+        if (!endereco) {
+            throw new Error("Endereço não encontrado.");
+        }
+
+        return endereco;
+    }
+
+    // Buscar endereço pelo ID do usuário
+    async findByUserId(id_usuario: number) {
+
+        if (!Number.isInteger(id_usuario) || id_usuario <= 0) {
+            throw new Error("ID de usuário inválido.");
+        }
+
+        const endereco =
+            await this.enderecoRepository.findByUserId(id_usuario);
 
         if (!endereco) {
             throw new Error("Endereço não encontrado.");

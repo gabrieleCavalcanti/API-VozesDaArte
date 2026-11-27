@@ -1,14 +1,31 @@
-
 import { db } from "../database/connection.database";
 import { IFavorito } from "../models/favorito.model";
-import { ResultSetHeader, PoolConnection } from "mysql2/promise";
+import {
+    ResultSetHeader,
+    PoolConnection,
+    RowDataPacket
+} from "mysql2/promise";
+
+// INTERFACE DOS FAVORITOS COM DADOS DO ARTISTA
+export interface FavoritoArtista extends RowDataPacket {
+    id_favorito: number;
+    id_usuario: number;
+    id_artista: number;
+
+    nome: string;
+    url_foto_perfil: string | null;
+    url_foto_capa: string | null;
+    biografia: string | null;
+    contato_profissional: string | null;
+}
 
 export class FavoritoRepository {
 
-    // Buscar favorito pelo ID
+    // BUSCAR FAVORITO PELO ID
     async findById(id_favorito: number): Promise<IFavorito | null> {
         const [result] = await db.execute<IFavorito[]>(
-            `SELECT * FROM favoritos
+            `SELECT *
+             FROM favoritos
              WHERE id_favorito = ?`,
             [id_favorito]
         );
@@ -16,14 +33,15 @@ export class FavoritoRepository {
         return result.length > 0 ? result[0] : null;
     }
 
-    // Buscar favorito de um usuário para um artista
+    // BUSCAR FAVORITO DE UM USUÁRIO PARA UM ARTISTA
     async findByUsuarioAndArtista(
         id_usuario: number,
         id_artista: number
     ): Promise<IFavorito | null> {
 
         const [result] = await db.execute<IFavorito[]>(
-            `SELECT * FROM favoritos
+            `SELECT *
+             FROM favoritos
              WHERE id_usuario = ?
              AND id_artista = ?`,
             [id_usuario, id_artista]
@@ -32,14 +50,15 @@ export class FavoritoRepository {
         return result.length > 0 ? result[0] : null;
     }
 
-    // Verificar se o artista está favoritado pelo usuário
+    // VERIFICAR SE O ARTISTA ESTÁ FAVORITADO PELO USUÁRIO
     async exists(
         id_usuario: number,
         id_artista: number
     ): Promise<boolean> {
 
         const [result] = await db.execute<IFavorito[]>(
-            `SELECT id_favorito FROM favoritos
+            `SELECT id_favorito
+             FROM favoritos
              WHERE id_usuario = ?
              AND id_artista = ?`,
             [id_usuario, id_artista]
@@ -48,30 +67,56 @@ export class FavoritoRepository {
         return result.length > 0;
     }
 
-    // Listar todos os favoritos
+    // LISTAR TODOS OS FAVORITOS
     async findAll(): Promise<IFavorito[]> {
         const [result] = await db.execute<IFavorito[]>(
-            `SELECT * FROM favoritos`
+            `SELECT *
+             FROM favoritos`
         );
 
         return result;
     }
 
-    // Listar favoritos de um usuário
-    async findByUsuario(id_usuario: number): Promise<IFavorito[]> {
-        const [result] = await db.execute<IFavorito[]>(
-            `SELECT * FROM favoritos
-             WHERE id_usuario = ?`,
+    // LISTAR FAVORITOS DO USUÁRIO COM DADOS COMPLETOS DOS ARTISTAS
+    async findByUsuario(
+        id_usuario: number
+    ): Promise<FavoritoArtista[]> {
+
+        const [result] = await db.execute<FavoritoArtista[]>(
+            `SELECT
+                f.id_favorito,
+                f.id_usuario,
+                f.id_artista,
+
+                u.nome,
+                u.url_foto_perfil,
+
+                a.url_foto_capa,
+                a.biografia,
+                a.contato_profissional
+
+             FROM favoritos f
+
+             INNER JOIN artistas a
+                ON a.id_artista = f.id_artista
+
+             INNER JOIN usuarios u
+                ON u.id_usuario = a.id_usuario
+
+             WHERE f.id_usuario = ?
+
+             ORDER BY f.id_favorito DESC`,
             [id_usuario]
         );
 
         return result;
     }
 
-    // Listar usuários que favoritaram um artista
+    // LISTAR USUÁRIOS QUE FAVORITARAM UM ARTISTA
     async findByArtista(id_artista: number): Promise<IFavorito[]> {
         const [result] = await db.execute<IFavorito[]>(
-            `SELECT * FROM favoritos
+            `SELECT *
+             FROM favoritos
              WHERE id_artista = ?`,
             [id_artista]
         );
@@ -79,7 +124,7 @@ export class FavoritoRepository {
         return result;
     }
 
-    // Criar favorito
+    // CRIAR FAVORITO
     async create(
         id_artista: number,
         id_usuario: number,
@@ -98,7 +143,7 @@ export class FavoritoRepository {
         return result.insertId;
     }
 
-    // Excluir favorito
+    // EXCLUIR FAVORITO
     async delete(
         id_favorito: number,
         connection?: PoolConnection
@@ -115,7 +160,7 @@ export class FavoritoRepository {
         return result.affectedRows > 0;
     }
 
-    // Remover favorito pelo usuário e artista
+    // REMOVER FAVORITO PELO USUÁRIO E ARTISTA
     async deleteByUsuarioAndArtista(
         id_usuario: number,
         id_artista: number,

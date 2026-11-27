@@ -1,18 +1,20 @@
+
 import { db } from "../database/connection.database";
 import { ResultSetHeader, RowDataPacket } from "mysql2/promise";
 import { IEndereco } from "../models/endereco.model";
 
 export class EnderecoRepository {
-  // BUSCAR ENDEREÇO DO USUÁRIO
+
+  // BUSCAR ENDEREÇO DO USUÁRIO PELO USERNAME
   async findByUsername(username: string): Promise<IEndereco | null> {
     const [rows] = await db.execute<RowDataPacket[]>(
       `SELECT e.*
-             FROM autenticacao a
-             INNER JOIN usuarios u
-                ON a.id_usuario = u.ID_Usuario
-             INNER JOIN enderecos e
-                ON u.id_endereco = e.id_endereco
-             WHERE a.username = ?`,
+       FROM autenticacao a
+       INNER JOIN usuarios u
+          ON a.id_usuario = u.ID_Usuario
+       INNER JOIN enderecos e
+          ON u.id_endereco = e.id_endereco
+       WHERE a.username = ?`,
       [username],
     );
 
@@ -22,22 +24,41 @@ export class EnderecoRepository {
 
     return rows[0] as IEndereco;
   }
+
+  // BUSCAR ENDEREÇO PELO ID DO USUÁRIO
+  async findByUserId(id_usuario: number): Promise<IEndereco | null> {
+    const [rows] = await db.execute<RowDataPacket[]>(
+      `SELECT e.*
+       FROM usuarios u
+       INNER JOIN enderecos e
+          ON u.id_endereco = e.id_endereco
+       WHERE u.ID_Usuario = ?`,
+      [id_usuario],
+    );
+
+    if (rows.length === 0) {
+      return null;
+    }
+
+    return rows[0] as IEndereco;
+  }
+
   // CADASTRAR ENDEREÇO INDEPENDENTE
   async create(endereco: IEndereco): Promise<number> {
     const [result] = await db.execute<ResultSetHeader>(
       `INSERT INTO enderecos (
-      cep,
-      rua,
-      complemento,
-      uf,
-      estado,
-      cidade,
-      bairro,
-      numero,
-      latitude,
-      longitude
-    )
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        cep,
+        rua,
+        complemento,
+        uf,
+        estado,
+        cidade,
+        bairro,
+        numero,
+        latitude,
+        longitude
+      )
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         endereco.cep,
         endereco.rua,
@@ -64,11 +85,11 @@ export class EnderecoRepository {
 
       const [usuarios] = await connection.execute<RowDataPacket[]>(
         `SELECT u.ID_Usuario, u.id_endereco
-                 FROM autenticacao a
-                 INNER JOIN usuarios u
-                    ON a.id_usuario = u.ID_Usuario
-                 WHERE a.username = ?
-                 FOR UPDATE`,
+         FROM autenticacao a
+         INNER JOIN usuarios u
+            ON a.id_usuario = u.ID_Usuario
+         WHERE a.username = ?
+         FOR UPDATE`,
         [username],
       );
 
@@ -84,17 +105,17 @@ export class EnderecoRepository {
         // ATUALIZAR ENDEREÇO EXISTENTE
         await connection.execute(
           `UPDATE enderecos
-                     SET cep = ?,
-                         rua = ?,
-                         complemento = ?,
-                         uf = ?,
-                         estado = ?,
-                         cidade = ?,
-                         bairro = ?,
-                         numero = ?,
-                         latitude = ?,
-                         longitude = ?
-                     WHERE id_endereco = ?`,
+           SET cep = ?,
+               rua = ?,
+               complemento = ?,
+               uf = ?,
+               estado = ?,
+               cidade = ?,
+               bairro = ?,
+               numero = ?,
+               latitude = ?,
+               longitude = ?
+           WHERE id_endereco = ?`,
           [
             endereco.cep,
             endereco.rua,
@@ -115,10 +136,18 @@ export class EnderecoRepository {
         // CADASTRAR NOVO ENDEREÇO
         const [result] = await connection.query<ResultSetHeader>(
           `INSERT INTO enderecos (
-        cep, rua, complemento, uf, estado,
-        cidade, bairro, numero, latitude, longitude
-    )
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            cep,
+            rua,
+            complemento,
+            uf,
+            estado,
+            cidade,
+            bairro,
+            numero,
+            latitude,
+            longitude
+          )
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
           [
             endereco.cep,
             endereco.rua,
@@ -138,8 +167,8 @@ export class EnderecoRepository {
         // VINCULAR ENDEREÇO AO USUÁRIO
         await connection.execute(
           `UPDATE usuarios
-                     SET id_endereco = ?
-                     WHERE ID_Usuario = ?`,
+           SET id_endereco = ?
+           WHERE ID_Usuario = ?`,
           [idEndereco, usuario.ID_Usuario],
         );
       }
@@ -147,9 +176,11 @@ export class EnderecoRepository {
       await connection.commit();
 
       return idEndereco;
+
     } catch (error) {
       await connection.rollback();
       throw error;
+
     } finally {
       connection.release();
     }
